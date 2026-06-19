@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ExerciseSet from './components/ExerciseSet';
-import { ExerciseSetConfig } from './utils/ExerciseSetConfig';
+import { ExerciseSetConfig } from './types/ExerciseSetConfig';
+import { DEFAULT_EXERCISE } from './constants/defaultExercise.constants';
+import { parseExercise } from './utils/exerciseImport';
 import './App.css';
 
 function App() {
@@ -12,13 +14,7 @@ function App() {
   const addSet = () => {
     setExerciseSets(prev => [
       ...prev,
-      {
-        exerciseLabel: "New Exercise",
-        exerciseWeight: 45,
-        numberOfSets: 5,
-        numberOfReps: 5,
-        restTime: 90
-      }
+      DEFAULT_EXERCISE
     ]);
   };
   const removeSet = (index: number) => {
@@ -72,23 +68,10 @@ function App() {
           .split(/[;\n]/)
           .map(line => line.trim())
           .filter(Boolean)
-          .map(line => {
-            const [
-              exerciseLabel,
-              exerciseWeight,
-              numberOfSets,
-              numberOfReps,
-              restTime
-            ] = line.split(',');
-
-            return {
-              exerciseLabel: exerciseLabel.trim(),
-              exerciseWeight: Number(exerciseWeight),
-              numberOfSets: Number(numberOfSets),
-              numberOfReps: Number(numberOfReps),
-              restTime: Number(restTime)
-            };
-          });
+          .map(parseExercise)
+          .filter(
+            (exercise): exercise is ExerciseSetConfig => exercise !== null
+          );
 
       setExerciseSets(importedSets);
     } catch (err) {

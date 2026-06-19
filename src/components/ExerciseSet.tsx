@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './ExerciseSet.css';
-import { ExerciseSetConfig } from '../utils/ExerciseSetConfig';
+import { ExerciseSetConfig } from '../types/ExerciseSetConfig';
 
 type Circle = {
   id: number;
@@ -55,6 +55,7 @@ const ExerciseSet: React.FC<Props> = ({ config, remove, updateConfig, startGloba
     setNumberOfSetCircles(newNumberOfSets);
   }, [numberOfSets]);
 
+  /*
   useEffect(() => {
     const data = {
       exerciseLabel: exerciseLabel,
@@ -65,12 +66,7 @@ const ExerciseSet: React.FC<Props> = ({ config, remove, updateConfig, startGloba
     };
     // localStorage.setItem(`circleSet-${id}`, JSON.stringify(data));
   }, [exerciseLabel, exerciseWeight, numberOfReps, restTime, numberOfSets]);
-
-  const createCircles = () => {
-    const newCircles = Array.from({ length: numberOfSets }, (_, i) => ({ id: i, value: null }));
-    setNumberOfSetCircles(newCircles);
-  };
-
+  */
 
   const handleCircleClick = (id: number) => {
     setNumberOfSetCircles(prev =>
