@@ -1,58 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import './ExerciseSet.css';
+import { ExerciseSetConfig } from '../utils/ExerciseSetConfig';
 
 type Circle = {
   id: number;
   value: number | null;
 };
 
+/*
+
+Sample data:
+Pushups,10,30,5;
+Pullups,5,45,3;
+Squats,20,60,8
+
+Squat,130,5,5,120
+Bench,135,5,5,120
+Barbell Row,135,5,5,120
+Dumbbell Curl,30,3,8,90
+
+Bench,135,5,5,120;
+Barbell Row,135,5,5,120;
+Dumbbell Curl,30,3,8,90;
+
+Bench,135,5,5,120;Barbell Row,135,5,5,120;Dumbbell Curl,30,3,8,90;
+
+Bench,135,abc,xyz,120;
+Barbell Row,135,5,5,120;
+Dumbbell Curl,30,3,8,90;
+
+*/
+
 type Props = {
-  index: number;
-  id: number;
+  config: ExerciseSetConfig;
   remove: () => void;
-  autoCreate?: boolean,
-  timer: number | null,
-  startGlobalTimer: () => void;
+  updateConfig: (config: ExerciseSetConfig) => void;
+  startGlobalTimer: (seconds: number) => void;
 };
 
-const ExerciseSet: React.FC<Props> = ({ index, id, remove, autoCreate, timer, startGlobalTimer}) => {
-  const [exerciseLabel, setExerciseLabel] = useState("New Exercise");
-  const [exerciseWeight, setExerciseWeight] = useState(45);
+const ExerciseSet: React.FC<Props> = ({ config, remove, updateConfig, startGlobalTimer }) => {
   const [flipped, setFlipped] = useState(false);
-  const [numberOfReps, setNumberOfReps] = useState(5);
-  const [restTime, setRestTime] = useState(10);
-  const [numberOfSets, setNumberOfSets] = useState(5);
   const [numberOfSetCircles, setNumberOfSetCircles] = useState<Circle[]>([]);
+  const {
+    exerciseLabel,
+    exerciseWeight,
+    numberOfSets,
+    numberOfReps,
+    restTime
+  } = config;
 
-  // useEffect(() => {
-  //   createCircles();
-  //   return () => clearInterval(intervalRef.current!);
-  // }, []);
-
-
-  useEffect(() => {
-    // change this to import from clipboard
-    /*
-    const saved = localStorage.getItem(`circleSet-${id}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      console.log(parsed.label)
-      setExerciseLabel(parsed.label);
-      setWeight(parsed.weight);
-      setStartNum(parsed.startNum);
-      setRestTime(parsed.timeLimit);
-      setNumberOfSets(parsed.circleCount);
-      setNumberOfReps(parsed.circles);
-    } else if (autoCreate) {
-      createCircles(); // not needed?
-    }
-    */
-    if (autoCreate) {
-      createCircles();
-    }
-    // createCircles();    
-
-  }, []);
 
   useEffect(() => {
     const newNumberOfSets = Array.from({ length: numberOfSets }, (_, i) => ({ id: i, value: null }));
@@ -86,8 +82,7 @@ const ExerciseSet: React.FC<Props> = ({ index, id, remove, autoCreate, timer, st
         return c;
       })
     );
-    // startCountdown();
-    startGlobalTimer()
+    startGlobalTimer(restTime)
   };
 
   return (
@@ -102,10 +97,10 @@ const ExerciseSet: React.FC<Props> = ({ index, id, remove, autoCreate, timer, st
         </div>
       </div>
       <div className='weight-settings'>
-        <button onClick={() => setExerciseWeight(prev => prev - 5)}>-</button>
+        <button onClick={() => updateConfig({ ...config, exerciseWeight: exerciseWeight - 5 })}>-</button>
         <div className="set-label">{exerciseWeight} lb</div>
-        <button onClick={() => setExerciseWeight(prev => prev + 5)}>+</button>
-        </div>
+        <button onClick={() => updateConfig({ ...config, exerciseWeight: exerciseWeight + 5 })}>+</button>
+      </div>
 
 
       <div className={`card ${flipped ? 'flipped' : ''}`}>
@@ -125,28 +120,26 @@ const ExerciseSet: React.FC<Props> = ({ index, id, remove, autoCreate, timer, st
         <div className="card-side card-back">
           <label>
             Exercise:
-            <input value={exerciseLabel} onChange={e => setExerciseLabel(e.target.value)} />
+            <input value={exerciseLabel} onChange={e => updateConfig({ ...config, exerciseLabel: e.target.value })} />
           </label>
           <label>
             Weight (lb):
-            <input value={exerciseWeight} onChange={e => setExerciseWeight(+e.target.value)} />
+            <input value={exerciseWeight} onChange={e => updateConfig({ ...config, exerciseWeight: +e.target.value })} />
           </label>
           <label>
             # of Sets:
-            <input type="number" value={numberOfSets} onChange={e => setNumberOfSets(+e.target.value)} />
+            <input type="number" value={numberOfSets} onChange={e => updateConfig({ ...config, numberOfSets: +e.target.value })} />
           </label>
           <label>
             # of Reps:
-            <input type="number" value={numberOfReps} onChange={e => setNumberOfReps(+e.target.value)} />
+            <input type="number" value={numberOfReps} onChange={e => updateConfig({ ...config, numberOfReps: +e.target.value })} />
           </label>
           <label>
             Rest Time (sec):
-            <input type="number" value={restTime} onChange={e => setRestTime(+e.target.value)} />
+            <input type="number" value={restTime} onChange={e => updateConfig({ ...config, restTime: +e.target.value })} />
           </label>
-          {/* <button onClick={createCircles}>Generate Circles</button> */}
         </div>
       </div>
-      {/* <div className="timer-display">{timer !== null ? `Time: ${timer}s` : ''}</div> */}
     </div>
   );
 };

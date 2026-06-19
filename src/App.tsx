@@ -4,26 +4,55 @@ import { ExerciseSetConfig } from './utils/ExerciseSetConfig';
 import './App.css';
 
 function App() {
-  const [sets, setSets] = useState<number[]>([]);
+  const [exerciseSets, setExerciseSets] = useState<ExerciseSetConfig[]>([]);
   const [timer, setTimer] = useState<number | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [importText, setImportText] = useState('');
 
-  const timerLimit = 90;
+  const addSet = () => {
+    setExerciseSets(prev => [
+      ...prev,
+      {
+        exerciseLabel: "New Exercise",
+        exerciseWeight: 45,
+        numberOfSets: 5,
+        numberOfReps: 5,
+        restTime: 90
+      }
+    ]);
+  };
+  const removeSet = (index: number) => {
+    setExerciseSets(prev =>
+      prev.filter((_, i) => i !== index)
+    );
+  };
 
+  const updateSet = (
+    index: number,
+    updated: ExerciseSetConfig
+  ) => {
+    setExerciseSets(prev =>
+      prev.map((set, i) =>
+        i === index ? updated : set
+      )
+    );
+  };
 
-  const addSet = () => setSets([...sets, Date.now()]);
-  const removeSet = (index: number) => setSets(sets.filter((_, i) => i !== index));
+  const startGlobalTimer = (seconds: number) => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+    }
 
-  const startGlobalTimer = () => {
-    if (intervalRef.current !== null) clearInterval(intervalRef.current);
+    let remaining = seconds;
 
-    let remaining = timerLimit;
     setTimer(remaining);
+
     intervalRef.current = setInterval(() => {
       remaining--;
+
       setTimer(remaining);
-      if (remaining <= 0 && intervalRef.current !== null) {
+
+      if (remaining <= 0 && intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     }, 1000);
@@ -35,88 +64,54 @@ function App() {
     };
   }, []);
 
-  const handleExportToClipboard = () => {
-    const exportData: Record<string, ExerciseSetConfig> = {};
-
-    sets.forEach(id => {
-      const raw = localStorage.getItem(`circleSet-${id}`);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        exportData[id] = {
-          exerciseLabel: parsed.exerciseLabel,
-          exerciseWeight: parsed.exerciseWeight,
-          numberOfReps: parsed.numberOfReps,
-          restTime: parsed.restTime,
-          numberOfSets: parsed.numberOfSets
-        };
-      }
-    });
-
-    const json = JSON.stringify(exportData, null, 2);
-    navigator.clipboard.writeText(json)
-      .then(() => alert('Exported to clipboard!'))
-      .catch(err => alert('Clipboard error: ' + err));
-  };
-
-  const handleJSONImportFromText = () => {
-    try {
-      const parsed = JSON.parse(importText);
-      const ids = Object.keys(parsed);
-
-      ids.forEach(id => {
-        const config = parsed[id];
-        localStorage.setItem(`circleSet-${id}`, JSON.stringify({
-          label: config.label,
-          startNum: config.start_number,
-          timeLimit: config.time,
-          circleCount: config.number_of_circles,
-          circles: Array.from({ length: config.number_of_circles }, (_, i) => ({ id: i, value: null }))
-        }));
-      });
-
-      setSets(ids.map(id => parseInt(id)));
-      alert('Imported successfully!');
-    } catch (err) {
-      alert('Invalid JSON: ' + err);
-    }
-  };
 
   const handleImportFromText = () => {
     try {
-      const lines = importText
-        .split(';')
-        .map(line => line.trim())
-        .filter(Boolean);
+      const importedSets: ExerciseSetConfig[] =
+        importText
+          .split(/[;\n]/)
+          .map(line => line.trim())
+          .filter(Boolean)
+          .map(line => {
+            const [
+              exerciseLabel,
+              exerciseWeight,
+              numberOfSets,
+              numberOfReps,
+              restTime
+            ] = line.split(',');
 
-      const newSets: number[] = [];
+            return {
+              exerciseLabel: exerciseLabel.trim(),
+              exerciseWeight: Number(exerciseWeight),
+              numberOfSets: Number(numberOfSets),
+              numberOfReps: Number(numberOfReps),
+              restTime: Number(restTime)
+            };
+          });
 
-      lines.forEach(line => {
-        const [label, startNum, timeLimit, circleCount] =
-          line.split(',').map(item => item.trim());
-
-        const id = Date.now() + Math.floor(Math.random() * 10000);
-
-        const config = {
-          id,
-          label,
-          startNum: Number(startNum),
-          timeLimit: Number(timeLimit),
-          circleCount: Number(circleCount)
-        };
-
-        newSets.push(id);
-
-        // Store in whatever state management you're using
-        // instead of localStorage
-        // addImportedSet(config);
-      });
-
-
-      setSets(newSets);
-      alert('Imported successfully!');
+      setExerciseSets(importedSets);
     } catch (err) {
-      alert('Invalid text: ' + err);
+      alert("Invalid import format");
     }
+  };
+
+  const handleExportToClipboard = async () => {
+    const text = exerciseSets
+      .map(set =>
+        [
+          set.exerciseLabel,
+          set.exerciseWeight,
+          set.numberOfSets,
+          set.numberOfReps,
+          set.restTime
+        ].join(',')
+      )
+      .join(';\n');
+
+    await navigator.clipboard.writeText(text);
+
+    alert('Copied to clipboard');
   };
 
   return (
@@ -134,10 +129,18 @@ function App() {
       <button className="add-set-btn" onClick={addSet}>＋ Add Set</button>
       <div className="global-timer">
         {/* TODO: pin this to the top of the page? */}
-        {timer !== null ? `Global Timer: ${timer}s` : sets.length > 0 ? 'Click any circle to start' : ''}
+        {timer !== null ? `Global Timer: ${timer}s` : exerciseSets.length > 0 ? 'Click any circle to start' : ''}
       </div>
-      {sets.map((key, index) => (
-        <ExerciseSet key={key} index={index} id={key} remove={() => removeSet(index)} autoCreate={true} timer={timer} startGlobalTimer={startGlobalTimer} />
+      {exerciseSets.map((config, index) => (
+        <ExerciseSet
+          key={index}
+          config={config}
+          remove={() => removeSet(index)}
+          updateConfig={(updated) =>
+            updateSet(index, updated)
+          }
+          startGlobalTimer={startGlobalTimer}
+        />
       ))}
     </div>
   );
