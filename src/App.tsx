@@ -7,6 +7,11 @@ import './App.css';
 
 /*
 TODO:
+
+-Fix CSS on mobile
+--Timer should be bigger and get users attention when finished
+
+-Exports:
 If exercise finished (all sets reached):
   if all reps reached: increase 5 lbs
   else say try again
