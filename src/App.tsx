@@ -79,8 +79,8 @@ function App() {
     }
   };
 
-  const handleExportToClipboard = async () => {
-    const text = exerciseSets
+  const handleExport = async () => {
+    const currentWorkout = exerciseSets
       .map(set =>
         [
           set.exerciseLabel,
@@ -92,15 +92,49 @@ function App() {
       )
       .join(';\n');
 
-    await navigator.clipboard.writeText(text);
+    const nextWorkoutTemplate = exerciseSets
+      .map(set =>
+        [
+          set.exerciseLabel,
+          set.exerciseWeight + 5,
+          set.numberOfSets,
+          set.numberOfReps,
+          set.restTime
+        ].join(',')
+      )
+      .join(';\n');
 
-    alert('Copied to clipboard');
+    const text = `${currentWorkout}\n\nNext workout:\n${nextWorkoutTemplate}`;
+    // console.log(text)
+
+    const shareData = {
+      title: `${new Date().toLocaleDateString()} Workout`,
+      text: text,
+    };
+
+    // console.log(shareData)
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('Copied to clipboard');
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+      }
+    }
   };
+
 
   return (
     <div className="app">
       <div className="import-export">
-        {/* <button onClick={handleExportToClipboard}>📋 Export to Clipboard</button> */}
+        <button onClick={handleExport}>📤 Export</button>
         <textarea
           rows={5}
           placeholder="Paste text here to import"
