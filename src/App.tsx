@@ -5,6 +5,21 @@ import { DEFAULT_EXERCISE } from './constants/defaultExercise.constants';
 import { parseExercise } from './utils/exerciseImport';
 import './App.css';
 
+/*
+TODO:
+If exercise finished (all sets reached):
+  if all reps reached: increase 5 lbs
+  else say try again
+
+Have button at bottom of page for finish workout?
+
+Export should:
+Print current exercises reps/sets done
+
+Create template for next workout w/ increased weight if exercise was completed
+
+*/
+
 function App() {
   const [exerciseSets, setExerciseSets] = useState<ExerciseSetConfig[]>([]);
   const [timer, setTimer] = useState<number | null>(null);

@@ -1,12 +1,5 @@
 import { ExerciseSetConfig } from "../types/ExerciseSetConfig";
-
-const DEFAULT_EXERCISE: ExerciseSetConfig = {
-  exerciseLabel: 'New Exercise',
-  exerciseWeight: 45,
-  numberOfSets: 5,
-  numberOfReps: 5,
-  restTime: 90
-};
+import { DEFAULT_EXERCISE } from "../constants/defaultExercise.constants";
 
 const parseNumber = (
   value: string | undefined,
