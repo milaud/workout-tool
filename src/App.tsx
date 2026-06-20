@@ -26,6 +26,12 @@ function App() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [importText, setImportText] = useState('');
 
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const addSet = () => {
     setExerciseSets(prev => [
       ...prev,
@@ -65,6 +71,20 @@ function App() {
 
       if (remaining <= 0 && intervalRef.current) {
         clearInterval(intervalRef.current);
+        setTimer(0);
+
+        // play Glass.mp3
+        const sound = new Audio('/sounds/Glass.mp3')
+        sound.play().catch(err => {
+          console.log('Audio playback failed:', err);
+        });
+        // Notification doesn't work on iOS
+        if (Notification.permission === "granted") {
+          new Notification("Rest complete 💪", {
+            body: "Time to start your next set",
+            icon: "/favicon.ico"
+          });
+        }
       }
     }, 1000);
   };
